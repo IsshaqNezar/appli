@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { Switch } from 'react-native-paper';
 
+window.navigator.userAgent = 'react-native';
 
 
 export default class App extends React.Component  {
@@ -13,9 +14,53 @@ export default class App extends React.Component  {
     super(props);
 
     this.state = {
-      temperature: "12",
+      isLoading : true,
+      temperature: null,
+      dataSource : null,
       isSwitchOn: false,
     };
+  }
+
+  baseURL = 'http://192.168.0.50:3002/'; 
+
+  
+  
+  componentDidMount() {
+
+    this.socket = new WebSocket('ws://192.168.0.50:3002/');
+
+    this.socket.onopen = () => {
+      // connection opened
+    this.socket.send(JSON.stringify({type: 'connect'})); // send a message
+
+    };
+
+    this.socket.onmessage = (e) => {
+
+      e.data = JSON.parse(e.data)
+      // a message was received
+      if(e.data.type == 'temperature') {
+        this.setState({
+          temperature : e.data.valeur,
+        })
+      }
+      console.log(e.data.valeur);
+    };
+
+    return fetch(this.baseURL + 'temperature/5deceab017e01d67d7f755e0')
+    .then((response) => response.json())
+    .then((responseJson) => {
+
+      this.setState({
+        isLoading: false,
+        temperature: responseJson.valeur,
+      })
+
+    })
+    .catch((error) => {
+    
+    });
+    
   }
 
   render() {
@@ -23,6 +68,7 @@ export default class App extends React.Component  {
     const { isColdSwitchOn } = this.state;
     const { isWarmSwitchOn } = this.state;
 
+    
     return (
 
       <View style = {{flex : 1, backgroundColor: '#7bc7dd'}}>
@@ -51,7 +97,7 @@ export default class App extends React.Component  {
                         />
                         
                   </View>
-                  
+
                   <View style={{justifyContent: 'center', alignItems : 'center'}}>
 
                 <Text style={{color:"#e5e5e5",fontWeight:"500", fontSize: 17, paddingEnd: 8 , paddingBottom : 10}}>Activer le chauffage</Text>
