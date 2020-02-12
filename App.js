@@ -20,8 +20,9 @@ export default class App extends React.Component  {
       dataSource : null,
 
       isColdSwitchOn: false,
-      isWarmSwitchOn: false,
+      isAutoSwitchOn: false,
       isLightSwitchOn: false,
+
       vitesseventilo: null,
       seuilTemperature: null,
 
@@ -42,6 +43,7 @@ export default class App extends React.Component  {
   
   
   componentDidMount() {
+
 
     this.socket = new WebSocket('ws://192.168.0.50:3002/');
 
@@ -82,6 +84,7 @@ export default class App extends React.Component  {
     
     });
 
+    
   }
 
   _setVentiloSpeed = () => {
@@ -178,25 +181,114 @@ export default class App extends React.Component  {
 
   _voletup = () => {
     
-    this.setState(voletup = true);
 
-    console.log(this.state.voletup)
+    this._voletstop();
+
+    this.setState.voletup = true;
+    console.log(this.setState.voletup);
+
+    fetch('http://192.168.0.50:3002/voletup', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.setState.voletup,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+
   }
 
   _voletstop = () => {
+
+    this.setState.voletup = false;
+    this.setState.voletdown = false;
+
+    fetch('http://192.168.0.50:3002/voletup', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.setState.voletup,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+
+    fetch('http://192.168.0.50:3002/voletdown', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.setState.voletdown,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
     
   }
 
   _voletdown = () => {
+
+    this._voletstop();
+
+    this.setState.voletdown = true;
+    console.log(this.setState.voletdown);
+
+    fetch('http://192.168.0.50:3002/voletdown', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.setState.voletdown,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
     
   }
 
+  _activerventilo = () => {
+
+    console.log(!this.state.isColdSwitchOn);
+    
+    fetch('http://192.168.0.50:3002/ventilateur', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: !this.setState.isColdSwitchOn,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+    
+  }
 
 
   render() {
 
     const { isColdSwitchOn } = this.state;
-    const { isWarmSwitchOn } = this.state;
+    const { isAutoSwitchOn } = this.state;
     const { isLightSwitchOn } = this.state;
 
 
@@ -241,8 +333,8 @@ export default class App extends React.Component  {
                             theme = "light"
                             value={isColdSwitchOn}
                             onValueChange={() =>
-                            { this.setState({ isColdSwitchOn: !isColdSwitchOn }); 
-                              
+                            { this.setState({ isColdSwitchOn: !isColdSwitchOn });
+                              this._activerventilo();
                             }
                             }
                         />
@@ -256,9 +348,9 @@ export default class App extends React.Component  {
                     <Switch
                                 color = "#e42d65"
                                 
-                                value={isWarmSwitchOn}
+                                value={isAutoSwitchOn}
                                 onValueChange={() =>
-                                { this.setState({ isWarmSwitchOn: !isWarmSwitchOn });
+                                { this.setState({ isWarmSwitchOn: !isAutoSwitchOn });
                                   
                                 }
                                 }
