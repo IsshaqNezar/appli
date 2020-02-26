@@ -22,6 +22,7 @@ export default class App extends React.Component  {
       isColdSwitchOn: false,
       isAutoSwitchOn: false,
       isLightSwitchOn: false,
+      light: 0,
 
       vitesseventilo: null,
       seuilTemperature: null,
@@ -185,7 +186,7 @@ export default class App extends React.Component  {
     this._voletstop();
 
     this.setState.voletup = true;
-    console.log(this.setState.voletup);
+    console.log(this.state.voletup);
 
     fetch('http://192.168.0.50:3002/voletup', {
       method: 'POST',
@@ -206,8 +207,8 @@ export default class App extends React.Component  {
 
   _voletstop = () => {
 
-    this.setState.voletup = false;
-    this.setState.voletdown = false;
+    this.state.voletup = false;
+    this.state.voletdown = false;
 
     fetch('http://192.168.0.50:3002/voletup', {
       method: 'POST',
@@ -216,9 +217,11 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: this.setState.voletup,
+        valeur: false,
       }),
     })
+    .then(res => { return res.json();})
+    .then(data => { console.log(data); })
     .catch((error) => {
       console.log(error);
     });
@@ -231,7 +234,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: this.setState.voletdown,
+        valeur: false,
       }),
     })
     .catch((error) => {
@@ -284,12 +287,32 @@ export default class App extends React.Component  {
     
   }
 
+  _allumerlumiere = () => {
+    this.state.light = 1-this.state.light;
+    console.log(this.state.light);
+
+    fetch('http://192.168.0.50:3002/lumiere', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.state.light,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  }
 
   render() {
 
     const { isColdSwitchOn } = this.state;
     const { isAutoSwitchOn } = this.state;
     const { isLightSwitchOn } = this.state;
+    const { light } = this.state;
 
 
     
@@ -442,7 +465,11 @@ export default class App extends React.Component  {
                                 
                                 value={isLightSwitchOn}
                                 onValueChange={() =>
-                                { this.setState({ isLightSwitchOn: !isLightSwitchOn }); }
+                                { this.setState({ isLightSwitchOn: !isLightSwitchOn,
+                                                  light: 1-light,
+                                });
+                                this._allumerlumiere();
+                              }
                                 }
                             />
                     
