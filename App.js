@@ -20,9 +20,13 @@ export default class App extends React.Component  {
       dataSource : null,
 
       isColdSwitchOn: false,
-      isAutoSwitchOn: false,
+      isWarmSwitchOn: false,
       isLightSwitchOn: false,
       light: 0,
+      fan : 0,
+      automode: 0,
+      alarm: 0,
+
 
       vitesseventilo: null,
       seuilTemperature: null,
@@ -31,9 +35,9 @@ export default class App extends React.Component  {
       tempseclairage : null,
       seuileclairage : null,
 
-      voletup: false,
-      voletstop: false,
-      voletdown: false,
+      voletup: 0,
+      voletstop: 0,
+      voletdown: 0,
 
       value: null,
     };
@@ -185,8 +189,7 @@ export default class App extends React.Component  {
 
     this._voletstop();
 
-    this.setState.voletup = true;
-    console.log(this.state.voletup);
+    this.state.voletup = 1-this.state.voletup;
 
     fetch('http://192.168.0.50:3002/voletup', {
       method: 'POST',
@@ -195,7 +198,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: this.setState.voletup,
+        valeur: this.state.voletup,
       }),
     })
     .catch((error) => {
@@ -207,8 +210,8 @@ export default class App extends React.Component  {
 
   _voletstop = () => {
 
-    this.state.voletup = false;
-    this.state.voletdown = false;
+    this.state.voletup = 0;
+    this.state.voletdown = 0;
 
     fetch('http://192.168.0.50:3002/voletup', {
       method: 'POST',
@@ -217,7 +220,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: false,
+        valeur: 0,
       }),
     })
     .then(res => { return res.json();})
@@ -234,7 +237,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: false,
+        valeur: 0,
       }),
     })
     .catch((error) => {
@@ -247,7 +250,7 @@ export default class App extends React.Component  {
 
     this._voletstop();
 
-    this.setState.voletdown = true;
+    this.state.voletdown = 1-this.state.voletdown;
     console.log(this.setState.voletdown);
 
     fetch('http://192.168.0.50:3002/voletdown', {
@@ -257,7 +260,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: this.setState.voletdown,
+        valeur: this.state.voletdown,
       }),
     })
     .catch((error) => {
@@ -269,7 +272,7 @@ export default class App extends React.Component  {
 
   _activerventilo = () => {
 
-    console.log(!this.state.isColdSwitchOn);
+    this.state.fan = 1-this.state.fan;
     
     fetch('http://192.168.0.50:3002/ventilateur', {
       method: 'POST',
@@ -278,7 +281,7 @@ export default class App extends React.Component  {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        valeur: !this.setState.isColdSwitchOn,
+        valeur: this.state.fan,
       }),
     })
     .catch((error) => {
@@ -304,15 +307,54 @@ export default class App extends React.Component  {
     .catch((error) => {
       console.log(error);
     });
+  }
 
+  _automode = () => {
+    this.state.automode = 1-this.state.automode;
+    
+    fetch('http://192.168.0.50:3002/auto', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.state.automode,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  }
+
+  _alarm = () => {
+    
+    fetch('http://192.168.0.50:3002/flamme', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valeur: this.state.alarm,
+      }),
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+    
   }
 
   render() {
 
     const { isColdSwitchOn } = this.state;
-    const { isAutoSwitchOn } = this.state;
+    const { isWarmSwitchOn } = this.state;
     const { isLightSwitchOn } = this.state;
     const { light } = this.state;
+    const { fan } = this.state
+    const { automode } = this.state
 
 
     
@@ -326,7 +368,9 @@ export default class App extends React.Component  {
         </View>
 
                                   <View style={{padding : 15}}>
-                                  <TouchableOpacity>
+                                  <TouchableOpacity 
+                                    onPress = {this._alarm}
+                                  >
                                   <Foundation name = "sound" size={35} color ="#e42d65"/>
                                   </TouchableOpacity>
                                   </View>
@@ -356,7 +400,9 @@ export default class App extends React.Component  {
                             theme = "light"
                             value={isColdSwitchOn}
                             onValueChange={() =>
-                            { this.setState({ isColdSwitchOn: !isColdSwitchOn });
+                            { this.setState({ isColdSwitchOn: !isColdSwitchOn,
+                                              fan: 1-fan,                    
+                              });
                               this._activerventilo();
                             }
                             }
@@ -367,17 +413,21 @@ export default class App extends React.Component  {
                   <View style={{justifyContent: 'center', alignItems : 'center'}}>
 
                 <Text style={{color:"#e5e5e5",fontWeight:"500", fontSize: 17, paddingEnd: 8 , paddingBottom : 25}}>Mode Automatique</Text>
+                    
 
-                    <Switch
-                                color = "#e42d65"
-                                
-                                value={isAutoSwitchOn}
-                                onValueChange={() =>
-                                { this.setState({ isWarmSwitchOn: !isAutoSwitchOn });
-                                  
+                      <Switch
+                            color = "#e42d65"
+                            theme = "light"
+                            value={isWarmSwitchOn}
+                            onValueChange={() =>
+                              { this.setState({ isWarmSwitchOn: !isWarmSwitchOn,
+                                                automode: 1-automode,
+                                  }); 
+                                  this._automode();
                                 }
-                                }
-                            />
+                                  }
+                              />
+
                 </View>  
 
                 </View>
